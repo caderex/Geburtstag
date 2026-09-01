@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unsere Erinnerungen | Midnight Autumn</title>
+  <style>
+    /* --- RESETS & BASE --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      font-family: 'Georgia', serif;
+      background: radial-gradient(circle at center, #140d08 0%, #050302 100%); 
+      background-color: #050302;
+      color: #c5b5a0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container { max-width: 850px; margin: 0 auto; }
+
+    /* --- TITEL --- */
+    h1.main-title { 
+      font-weight: normal; 
+      letter-spacing: 2px; 
+      text-align: center; 
+      margin-bottom: 25px; 
+      color: #d97724; 
+      font-size: 28px;
+    }
+
+    /* --- STICKY MENÜ --- */
+    .timeline-nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 10px;
+      z-index: 100;
+      background: rgba(10, 7, 5, 0.95);
+      padding: 12px;
+      backdrop-filter: blur(8px);
+      border-radius: 8px;
+      border: 1px solid #26160c;
+    }
+    
+    .timeline-btn {
+      background: #120b07;
+      border: 1px solid #2a180e;
+      color: #8c7663;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    
+    .timeline-btn:hover, .timeline-btn.active {
+      background: #d97724;
+      color: #050302;
+      border-color: #d97724;
+      font-weight: bold;
+    }
+
+    /* --- MONATS-AUSWAHL --- */
+    .month-select-wrapper { text-align: center; margin-bottom: 25px; }
+    select#monthSelect {
+      background: #120b07;
+      color: #c5b5a0;
+      border: 1px solid #2a180e;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 15px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* --- KALENDER & TEXT-CONTAINER --- */
+    .calendar-wrapper {
+      background: #0d0805;
+      border: 1px solid #26160c;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+      min-height: 300px;
+    }
+    
+    .calendar-header { 
+      display: grid; 
+      grid-template-columns: repeat(7, 1fr); 
+      text-align: center; 
+      font-size: 13px; 
+      color: #6e5845; 
+      text-transform: uppercase; 
+      margin-bottom: 12px; 
+      letter-spacing: 1px;
+    }
+    
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    
+    /* Normale Tage (2026) */
+    /* --- HIGHLIGHT FÜR ZEITSPANNEN / URLAUB (Warme Orange-Farbe) --- */
+.day.in-range {
+  border: 1px solid #733c11;
+  background: #1c0f06;
+  box-shadow: inset 0 0 10px rgba(217, 119, 36, 0.1);
+}
+.day.in-range .day-number {
+  color: #d97724;
+  font-weight: bold;
+}
+.day.in-range:hover {
+  background: #2b170a;
+  border-style: solid;
+  box-shadow: inset 0 0 12px rgba(217, 119, 36, 0.35), 0 0 10px rgba(217, 119, 36, 0.3);
+}
+    .day { 
+      background: #140d08;
+      border: 1px solid #1f120a; 
+      min-height: 75px; 
+      padding: 10px; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      position: relative;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+
+    .day-number {
+      font-size: 16px;
+      color: #6e5845;
+      transition: all 0.2s ease;
+    }
+    
+    .day:not(.empty):not(.has-event):hover { 
+      background: #1f140c; 
+      border-color: #4a2c17;
+    }
+
+    .day:not(.empty):not(.has-event):hover .day-number {
+      color: #c5b5a0;
+    }
+    
+    .day.empty { background: transparent; border: none; cursor: default; }
+
+    /* --- HIGHLIGHT FÜR EREIGNIS-TAGE IN 2026 --- */
+    .day.has-event { 
+      border: 1px solid #d97724; 
+      background: #241307; 
+      box-shadow: inset 0 0 10px rgba(217, 119, 36, 0.2), 0 0 12px rgba(217, 119, 36, 0.25);
+    }
+    
+    .day.has-event .day-number {
+      color: #ff9d42;
+      font-weight: bold;
+      font-size: 18px;
+      text-shadow: 0 0 8px rgba(255, 157, 66, 0.6);
+    }
+
+    .day.has-event:hover {
+      background: #331b0a;
+      box-shadow: inset 0 0 15px rgba(217, 119, 36, 0.4), 0 0 18px rgba(217, 119, 36, 0.5);
+    }
+
+    /* --- TEXT-HIGHLIGHT FÜR DIE VERGANGENEN JAHRE --- */
+    .highlight-date {
+      color: #ff9d42;
+      font-weight: bold;
+      text-shadow: 0 0 8px rgba(255, 157, 66, 0.6);
+      background: #241307;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid #d97724;
+      display: inline-block;
+    }
+.day.in-range.has-event {
+  background: #241307;
+  border: 2px solid #ff9d42;
+  box-shadow: inset 0 0 12px rgba(217, 119, 36, 0.35), 0 0 14px rgba(255, 157, 66, 0.4);
+}
+
+/* Hover-Effekte */
+.day.in-range:not(.has-event):hover {
+  background: #291507;
+  border-color: #a35618;
+}
+    .year-memory-text {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #b8a690;
+      padding: 20px 10px;
+    }
+
+    /* --- ALLGEMEINES MODAL / POPUP (Mit 75% Transparenz im Hintergrund) --- */
+    .modal { 
+      display: none; 
+      position: fixed; 
+      top: 0; left: 0; 
+      width: 100%; height: 100%; 
+      background: rgba(5, 3, 2, 0.75); 
+      z-index: 200; 
+      backdrop-filter: blur(5px);
+    }
+    
+    .modal-content { 
+      background: #0d0805; 
+      margin: 5% auto; 
+      padding: 25px; 
+      width: 90%; 
+      max-width: 450px; 
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: 10px; 
+      text-align: left; 
+      position: relative; 
+      border: 1px solid #d97724;
+      box-shadow: 0 10px 40px rgba(217, 119, 36, 0.25);
+    }
+    
+    .close { position: absolute; top: 12px; right: 18px; font-size: 24px; color: #6e5845; cursor: pointer; z-index: 201; }
+    .close:hover { color: #d97724; }
+    
+    .modal-date { 
+      font-size: 13px; 
+      color: #8c7663; 
+      text-transform: uppercase; 
+      letter-spacing: 1px; 
+      margin-bottom: 18px; 
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #26160c;
+    }
+
+    .event-block {
+      margin-bottom: 22px;
+    }
+    .event-block:not(:last-child) {
+      border-bottom: 1px solid #26160c;
+      padding-bottom: 18px;
+    }
+    .event-block h3 {
+      font-size: 20px;
+      color: #d97724;
+      font-weight: normal;
+      margin-bottom: 8px;
+    }
+    .event-block p {
+      font-size: 15px;
+      color: #b8a690;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    /* Klickbare Vorschaubilder */
+    .event-img {
+      width: 100%; 
+      height: auto; 
+      border-radius: 6px; 
+      border: 1px solid #26160c; 
+      margin-top: 10px;
+      cursor: zoom-in;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .event-img:hover {
+      transform: scale(1.02);
+      border-color: #d97724;
+    }
+
+    /* --- BILD-ZOOM OVERLAY --- */
+    #imageModal {
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .image-modal-container {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #zoomedImage {
+      max-width: 90vw;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px;
+      border: 1px solid #d97724;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+      transition: transform 0.15s ease-out;
+    }
+
+    .zoom-hint {
+      margin-top: 12px;
+      color: #8c7663;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+/* --- ZUSAMMENFASSUNG CONTAINER (UNTERHALB DES KALENDERS) --- */
+.summary-box {
+  background: #0d0805;
+  border: 1px solid #26160c;
+  border-radius: 10px;
+  margin-top: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+  overflow: hidden;
+}
+
+.summary-header {
+  padding: 18px 25px;
+  color: #d97724;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.summary-header:hover {
+  background: #140d08;
+}
+
+.summary-content {
+  display: none;
+  padding: 0 25px 25px 25px;
+  border-top: 1px dashed #26160c;
+  color: #b8a690;
+  line-height: 1.8;
+  font-size: 15px;
+  margin-top: 10px;
+  padding-top: 20px;
+}
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="main-title">UNSERE ERINNERUNGEN</h1>
+
+    <!-- Jahres-Menü -->
+    <div class="timeline-nav">
+      <button class="timeline-btn" onclick="selectYear(2019)">2019</button>
+      <button class="timeline-btn" onclick="selectYear(2022)">2022</button>
+      <button class="timeline-btn" onclick="selectYear(2025)">2025</button>
+      <button class="timeline-btn active" onclick="selectYear(2026)">2026</button>
+    </div>
+
+    <!-- Monats-Auswahl -->
+    <div class="month-select-wrapper" id="monthSelectWrapper">
+      <select id="monthSelect" onchange="renderCalendar2026()">
+        <option value="0">Januar</option>
+        <option value="1">Februar</option>
+        <option value="2">März</option>
+        <option value="3">April</option>
+        <option value="4" selected>Mai</option>
+        <option value="5">Juni</option>
+        <option value="6">Juli</option>
+        <option value="7">August</option>
+        <option value="8">September</option>
+        <option value="9">Oktober</option>
+        <option value="10">November</option>
+        <option value="11">Dezember</option>
+      </select>
+    </div>
+
+    <!-- Inhalts-Bereich -->
+    <div class="calendar-wrapper" id="contentArea"></div>
+  </div>
+
+  <!-- Begrüßungs-Pop-up -->
+  <div id="welcomeModal" class="modal" style="display: block;">
+    <div class="modal-content" style="text-align: center;">
+      <h3 style="color: #d97724; font-size: 22px; font-weight: normal; margin-bottom: 16px;">Willkommen</h3>
+      <p style="color: #b8a690; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+        Hey Lanja, hier findest du einige Daten, die ich persönlich auf unserer Reise für wichtig empfunden habe bisher. Aufgrund dessen, da dies dennoch im Internet ist, habe ich davon abgesehen ein Bild von dir persönlich zu nutzen, da ich dein Geheimnis wahren möchte. Ich hoffe dir gefällt das Ganze und es bringt dir ein kleines Lächeln.
+      </p>
+      <button onclick="closeWelcomeModal()" class="timeline-btn active" style="padding: 10px 30px; font-size: 16px;">
+        Okay
+      </button>
+    </div>
+  </div>
+
+  <!-- Detail-Fenster für Datums-Klicks -->
+  <div id="eventModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="modalDate" class="modal-date"></div>
+      <div id="modalEventsContainer"></div>
+    </div>
+  </div>
+
+  <!-- Vollbild- & Zoom-Modal für Bilder -->
+  <div id="imageModal" class="modal">
+    <span class="close" onclick="closeImageModal()" style="color: #d97724; font-size: 32px; top: 20px; right: 25px;">&times;</span>
+    <div class="image-modal-container">
+      <img id="zoomedImage" src="" alt="Großansicht">
+      <div class="zoom-hint">Mausrad drehen zum Zoomen</div>
+    </div>
+  </div>
+
+  <script>
+    let currentYear = 2026;
+const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+    const ranges2026 = [
+  {
+    start: "2026-08-10",
+    end: "2026-08-21",
+    titel: "Italien Urlaub",
+    beschreibung: ""
+  },
+  {
+    start: "2026-05-13",
+    end: "2026-05-16",
+    titel: "Madrid",
+    beschreibung: "",
+  },
+  {
+    start: "2026-05-19",
+    end: "2026-05-24",
+    titel: "Zu Besuch bei Oma in Tschechien",
+    beschreibung: "",
+  },
+  {
+    start: "2026-05-26",
+    end: "2026-05-27",
+    titel: "Hamburg Akon & Ne-Yo Konzert",
+    beschreibung: "",
+  },
+  {
+    start: "2026-05-29",
+    end: "2026-06-03",
+    titel: "Reise nach Holland",
+    beschreibung: "",
+  },
+  {
+    start: "2026-06-28",
+    end: "2026-07-03",
+    titel: "Zu Besuch Bei Oma in Tschechien",
+    beschreibung: "",
+  }
+];
+const monthSummaries = {
+  4: "Der Mai war sehr Intensiv, erstens haben wir dort wieder zum ersten mal wieder Kontakt gehabt, außerdem kamen wir uns sehr nahe, wir vertrauten uns innig ohne das es irgendwie komisch wurde. Du warst viel Unterwegs gewesen sei es in Madrid, bei deiner Oma, in Holland oder bei deinem Konzert. Du hast mich überall mit hin genommen und das war sehr schön.",
+  5: "Der Juni begann sehr ruhig, du hast mich gefragt wie ich mich fühle und haben gemeinsam echt viel Zeit miteinander verbracht sei es durch das Reden oder Serie schauen, auch wenn es eine Zeit gab kurz wo nicht der Kontakt so viel war, hat man sich ja dennoch nicht aus den Augen verloren.",
+  6: "Der Juli war auch noch gefüllt von der WM du warst noch bei deiner Oma beziehungsweise auf dem Rückweg und hast deine Nägel machen lassen, weil es dort günstiger war, jedoch war auch jeder einzelne Tag den man miteinander verbracht hat etwas besonderes. Vorallem das Gespräch wie wir uns die Zukunft so denken ob wir uns sehen möchten in der kommenden Zeit und wie schön umkompliziert das alles eigentlich bei uns ist. Du bist dort außerdem aus deiner Komfortzone gekommen und hast mir deine Füße gezeigt, auch wenn wir beide echt keine Füße mögen.",
+  7: "Der August war geprägt von deinem Urlaub in Italien und meinem Geburtstag. Ich hab den Hin sowie Rückflug mitbegleitet, du hast mir jeden Tag Tan line Fotos gezeigt und mich auf jede Reise mitgenommen, sei es nur in die Stadt oder zum Vulkan, es waren alles echt schöne Momente, die ich miterleben durfte. Besonders hervorzuheben ist das mir anzuvertrauen deines behütesten Geheimnisses, es ist immer noch so ein Schönes Gefühl endlich der Richtigen Person die Komplimente zu machen die sie verdient und dafür dank ich Dir.",
+  8:"Platzhalter"
+};
+
+    // EREIGNISSE FÜR 2026
+    const events2026 = {
+      "2026-05-06": [
+        {
+          titel: "Erneuter Kontakt",
+          beschreibung: "An dem Tag hatten wir nach längerer Zeit wieder Kontakt. Ich hatte dir damals auf Steam geschrieben, woraufhin du mich auf Discord hinzugefügt hast und wir direkt 3 Stunden telefoniert haben.",
+          bilder: ["begegnung.png", "telefonat.png"]    
+        }
+      ],
+      "2026-05-07": [
+        {
+          titel: "Fingernägel",
+          beschreibung: "Schon dort hast du mich gefragt, welche Nägel ich schön finden würde, und ich habe dir gesagt, welche mir gefallen.",
+          bild: "naegel.png"
+        },
+        {
+          titel: "Augen",
+          beschreibung: "Ebenso hast du mir an dem Tag das erste Mal deine Augen gezeigt, und ich muss echt sagen, dass ich sie wunderschön finde.",
+          bild: "augen.jpg"
+        }
+      ],
+      "2026-05-09": [
+        {
+          titel: "Das erste Mal am Telefon eingeschlafen",
+          beschreibung: "Hier haben wir 9 Stunden telefoniert und du bist dabei eingeschlafen, als ich etwas gestreamt habe. Das war wirklich süß und hat gezeigt, wie wohl man sich miteinander fühlt.",
+          bilder: ["eingeschlafen.png"]    
+        }
+      ],
+       "2026-05-13": [
+        {
+          titel: "Der Beginn deiner Reise nach Spanien",
+          beschreibung: "Das war mitten in der Nacht, du warst im Zug nach Regensburg und wir haben darüber geschwärmt wie schön es wäre, wenn du gekrault werden würdest von mir, ebenso hast du mir dort deinen Namen erklärt wo du meintest ich sei ein Poet, da ich sagte ohne ein Nest wären die Vögel dauerhaft am Fliegen und kämen niemals zu hause an.",
+          bilder: ""    
+        },
+       
+        {
+          titel: "Die Stadion Führung",
+          beschreibung:"An dem Tag hattet ihr auch eine Führung im Stadion und ab dort wusste ich auch das du das eigentlich nicht bist, jedoch hat mir persönlich das nichts ausgemacht da du nie deine Persönlichkeit mir vorenthalten hast, ja ich habe es dort noch lange nicht angesprochen" ,
+          bilder: ""    
+        }
+      ],
+      "2026-05-15":[
+        {
+          titel: "Die Schmuckfrage",
+          beschreibung:"ihr wart nochmal in der Stadt bummeln und du hast dir dann den Schmuck gekauft der mir gefallen hatte.",
+          bilder: ""    
+        }
+    ],
+    "2026-05-18":[
+        {
+          titel: "Die Tattoo Tour",
+          beschreibung:"du hast mir da alle deine Tattoos gezeigt und mir die bedeutungen erklärt, ich fand es sehr spannend und sehr tiefgründig.",
+          bilder: ["tat1.png","tat2.png","tat3.png"]
+        }
+          ],
+    "2026-05-20":[
+        {
+          titel: "Vorstellungen",
+          beschreibung:"Du warst bei deiner Oma zu dem Zeitpunkt und wir haben darüber gesprochen wie es wäre wenn ich mit eis,snacks vorbei kommen würde und wir kuscheln.",
+          bild: ""
+        }
+      ],
+      "2026-05-26":[
+        {
+          titel: "Vorstellungen pt2",
+          beschreibung:"Du warst im Zug nach Hamburg zum Akon & Ne-Yo Konzert, ich bin gerade wach geworden und du hast mir geschrieben das dir kalt ist, meine Antwort war das du meine Jacke haben kannst und du sagtest das du das generell fragen wollen würdest und dich an mich anlehnen würdest, weil ich dich gekrault hätte.",
+          bild:""
+        }
+      ],
+      "2026-05-28":[
+        {
+          titel: "Fragen über Fragen",
+          beschreibung:"Ihr wart unterwegs Richtung Holland und du hast mich sehr viel über Mama gefragt, was sie hat wie es ihr ergeht und das ich Sie drücken soll, ich fand das sehr herzlich von dir und das Interesse ihr gegenüber.",
+          bild:""
+        },
+        
+        {
+          titel: "Später am Abend - Kuscheln oder mehr?",
+          beschreibung:"Das war unser speziellster Moment den wir hatten, wir wissen beide nicht genau warum wir so gefühlt haben, aber fühlte sich in dem moment nicht falsch an, wir haben einfach den moment genossen und die Vorstellung was passieren könnte.",
+          bilder:""
+        }
+      ],
+        "2026-05-29":[
+            {
+            titel: "Vorstellungen pt3",
+            beschreibung:"Es ging wieder um das Kuscheln, dein Kopf auf meinen beinen und das ich dich kraulen würde, wir haben uns beide sehr wohl gefühlt in dem moment.",
+            bilder:""
+            }
+        ],
+    "2026-05-31":[
+        {
+            titel: "Eine Lange Nachricht",
+            beschreibung:"Ich hab dir eine lange nachricht geschrieben und dir gesagt wie sehr ich das ganze zwischen uns schätze und dein interesse mir gegenüber beziehungsweise gegenüber meiner Mutter, du sagtest selbst das dir das alles viel bedeute würde und sagtest das du sogar über die jahre nach mir geschaut hättest aber nichts gefunden hast",
+            bild:""
+        }  
+    ],
+    "2026-06-02":[
+        {
+            titel: "Vorstellungen pt4",
+            beschreibung:"wir haben ein wenig rum gejoked und dann kamst du damit das ich mir aussuchen sollte wo ich dich küssen würde, ich habe erst gehadert was ich sagen sollte weil ich nicht übergriffig wirken wollte, habe dies dann aber mit der Entscheidung untermauert das ich dich auf die Stirn küssen wollen würde, später kam ich dann mit dem Vorschlag am Abend das du ja dein Kopf auf meinen Schoß legen kannst oder das wir gemeinsam liegen du kamst dann mit den Gegenvorschlag das ich ja auch einfach mein Kopf zwischen deine Beine legen könne das du mich kraulen kannst, auch diesen Moment haben wir beide genossen.",
+            bilder:""
+        }
+    ],
+    "   2026-06-05":[
+        {
+            titel: "Fingernägel pt2",
+            beschreibung:"Das war das zweite Mal, das wir nach Fingernägeln geschaut haben explizit, wo du mich mit einbezogen hast welche mir gefallen würden,.",
+            bilder:""
+        }
+    ],
+    "2026-06-06":[
+        {
+            titel: "Sleepcall pt2",
+            beschreibung:"Ich hatte dich abends am 05.06.2026 angerufen nochmal angerufen gehabt und dann haben wir die Nacht über telefoniert irgendwann bist du dann eingeschlafen.",
+            bilder:""
+        }
+        ],
+    "2026-06-07":[
+        {
+            titel: "Fingernägel pt2.1",
+            beschreibung:"Dort lief dann die entgültige Entscheidung welche du dir dann 2 tage später machen lassen hast.",
+            bild:"nagel2.png"
+        }
+    ],
+    "2026-06-09":[
+        {
+            titel: "Gefühle?",
+            beschreibung:"Du fragtest mich ob ich Gefühle aufgebaut habe zu dir in einem Romantischen Sinne, ich hab dir gesagt das ich das alles nicht so Schwarz und Weiß sehe, das ich die Momente und die Szenarien die wir hatten natürlich schön fand aber ich mir persönlich zu diesem Zeitpunkt keine Gedanken gemacht habe ob ich Romantische Gefühle für dich habe, da für mich auf beider Seite das Interesse bestand diese Szenarien zu erleben.",
+            bilder:""
+        }
+    ],
+    "2026-06-12":[
+        {
+            titel: "Sleepcall pt3",
+            beschreibung:"Du hast mich um 3:30 angerufen und haben über die Nacht telefoniert irgendwann bist du dann eingeschlafen und hast mir geschrieben das dein Handy ausgegangen wäre und du hast dich gefragt ob du geschnarcht hättest oder irgendwelche Geräusche gemacht hast, was nicht der Fall war.",
+            bilder:""
+        }
+    ],
+    "2026-06-13":[
+        {
+            titel: "Die Namensänderung",
+            beschreibung:"Ich hatte schon immer mal im Kopf gehabt meinen Namen in Imvu zu ändern, jedoch kam ich nie auf irgendeine Idee im Call haben wir dann zusammen geschaut und dann wurde es caed, aber neben dem Namen wurden auch die Badges als auch die Raumnamen geändert, da ich dies für mich so entschieden habe.",
+            bilder:"namensaenderung.png"
+        }
+    ],
+    "2026-06-26":[
+        {
+            titel: "Konzert Berlin - Bruno Mars",
+            beschreibung:"Du bist in Berlin auf das Bruno Mars konzert gegangen und hast mich wie auch in dem Urlaub in Madrid sowie generell überall mit hingenommen und mich teilhaben lassen.",
+            bilder:""
+        }
+    ],
+    "2026-06-27":[
+        {
+            titel: "Konzert München - The Weeknd ",
+            beschreibung:"Auch dort hast du mich wieder mit hingenommen, was nicht selbstverständlich ist, da du auch einfach hättest entscheiden können das dir das Egal ist ob ich Videos davon bekomme oder nicht.",
+            bilder:""
+        }
+    ],
+    "2026-06-29":[
+        {
+            titel: "'Ich bin fertig'",
+            beschreibung:"Auf Snapchat hast du mir ein Bild geschickt gehabt was ich weil es so random war gespeichert habe, vorallem weil es ein 'echtes' Foto ist, ungestellt , ungeschönt , einfach ein 'dulli' Foto und das fand ich sehr schön.",
+            bilder:""
+        }
+    
+    ],
+    "2026-07-03":[
+        {
+            titel: "Fingernägel pt3",
+            beschreibung:"Wir haben überlegt welche Übergangsfingernägel schön sind bis du in den Urlaub fährst und es wurden schlussendlich diese nur ohne das Herz. welche du in Tschechien dir hast machen lassen.",
+            bild:"naegelpt3.jpeg"
+        }
+    ],
+    "2026-07-21":[
+        {
+            titel: "Zukunft?",
+            beschreibung:"Wir haatten ein Gespräch gehabt, darüber was wir gemeinsam unternehmen wollen und wie wir beide miteinander agieren und schreiben das dies alles sehr unkompliziert ist und wir die Momente genießen und nichts dabei irgendwie komisch ist.",
+            bilder:""
+        }
+    ],
+    "2026-07-25":[
+        {
+            titel: "'Jahrestag'",
+            beschreibung:"An diesem Tag da wir beide selbst nicht mehr wussten wie lange wir uns nun kennen, haben wir uns darauf geeinigt das der 22.02.2019 unser Jahrestag wird.",
+            bild:"Datum.png"
+        }
+    ],
+    "2026-08-06":[
+        {
+            titel: "Aus der Komfortzone",
+            beschreibung:"Du hast deine Zehnägel machen lassen und bist damit sehr aus deiner Komfortzone gegangen weil du normalerweise niemanden deine Füße zeigst, zumindest nicht so direkt.",
+            bilder:""
+        }
+    ],
+    "2026-08-07":[
+    {
+            titel: "Mein Geburtstag",
+            beschreibung:"Du hast mir gesagt das du ein Geschenk für mich hast zu meinem Geburtstag, ebenso hast du mir herausgesucht was ich essen sollte und ich hab da sehr auf dich vertraut, auch wenn es an dem Tag keine Gebackenen Bananen gab war der Tipp mit Sushi ein sehr guter, denn darauffolgend hab ich noch paar mal mehr dort bestellt.",
+            bilder:""
+        },
+    
+    {
+            titel: "Finernägel pt4",
+            beschreibung:"Du hast dir die Fingernägel machen lassen die wir eine woche vorher rausgesucht haben, bevor du dann in den Urlaub gefahren bist.", 
+            bilder:""
+        },
+    ],
+    "2026-08-08":[
+        {
+            titel: "MACH1",
+            beschreibung:"Das war dein Letzter Abend im Club in Deutschland, wir haben ein wenig rumgejoked das wir uns dort kennenlernen würden und das ich dich auf ein Drink einlade, es war ein sehr schöner Moment ein Tag nach meinem Geburtstag das zu machen, weil es sich auch nicht wirklich falsch angefühlt. ",
+            bilder:"MACH1.png"
+        }
+    ],
+    "2026-08-10":[
+        {
+            titel: "Der Flug nach Italien",
+            beschreibung:"Ich hab dir gesagt gehabt das Ich wachbleiben werde bis du sicher gelandet bist, ich hab beide Flüge mitverfolgt zu diesem Zeitpunkt um zu wissen ob auch alles okay ist und auch alles soweit nach Plan läuft, auch wenn ich danach echt Fertig war, war es mir sehr wichtig das du weißt das ich warte bis du sicher angekommen bist.",
+            bilder:["Hinflug (1).jpeg","Hinflug (2).jpeg"]
+        }
+    ],
+    "2026-08-13":[
+        {
+            titel: "Der Vulkan",
+            beschreibung:"An dem Tag wart auf dem Weg zum Ätna, der derzeit am Ausbruch war, es war ein sehr magischer Moment, auch dort .",
+            bilder:""
+        }
+    ],
+    "2026-08-20":[
+        {
+            titel: "Die Panikattacke",
+            beschreibung:"Ich habe dich mega 'genervt' an dem Tag weil ich deine Hilfe brauchte beziehungsweise nur dir geschrieben hatte und du mich am besten kanntest auch wenn du erst vorneweg wissen wolltest um mir zu helfen, was verständlich ist haben wir dann noch gesprochen gehabt und du hast mich gut beruhigen können, ich bin dir so dankbar dafür.",
+            bilder:""
+        }
+    ],
+    "2026-08-21":[
+        {
+            titel: "Der Rückflug",
+            beschreibung:"Wie auch beim Hinflug, habe ich dich bis du zu Hause angekommen bist gewartet bis du da warst, da dies ebenso sehr wichtig für mich ist.",
+            bilder:["Rueckflug (1).png","Rueckflug (2).png","Rueckflug (3).png"]
+        }
+    ],
+    "2026-08-24":[
+        {
+            titel: "Das Geheimnis",
+            beschreibung:"Erst wollte ich dir das über Discord sagen, dort sagtest du discord spinnt irgendwie und dann hab ich dich angerufen und hab es dir so gesagt das ich schon lange weiß, das du nicht das 'Gesicht' bist. Für dich ist in dem Moment eine Welt zusammengebrochen aber auf der anderen Seite hattest du die Möglichkeit endlich Frei zu sein und mir deine wahre Schönheit zu zeigen, das wird immer einer der Bedeutsamsten Momente sein die es für mich geben wird.",
+        
+    }
+]
+    }
+    function closeWelcomeModal() {
+      document.getElementById("welcomeModal").style.display = "none";
+    }
+
+    function selectYear(year) {
+      currentYear = year;
+      
+      document.querySelectorAll('.timeline-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.trim() === String(year)) {
+          btn.classList.add('active');
+        }
+      });
+
+      const monthWrapper = document.getElementById("monthSelectWrapper");
+
+      if (year === 2026) {
+        monthWrapper.style.display = "block";
+        renderCalendar2026();
+      } else {
+        monthWrapper.style.display = "none";
+        renderYearText(year);
+      }
+    }
+
+    function renderYearText(year) {
+        const oldSummary = document.getElementById("summaryBox");
+if (oldSummary) oldSummary.remove();
+      const container = document.getElementById("contentArea");
+      let content = "";
+
+      if (year === 2019) {
+        content = `
+          <div class="year-memory-text">
+            <span class="highlight-date">22.02.2019</span> Der Tag, den wir beschlossen haben, an dem wir uns kennengelernt haben.
+          </div>
+        `;
+      } else if (year === 2022) {
+        content = `
+          <div class="year-memory-text">
+            <span class="highlight-date">Februar 2022</span> gelegentlicher Kontakt mit Kontaktabbrüchen, was sich ca. 1 Jahr gezogen hat, danach war Kontaktabbruch.
+          </div>
+        `;
+      } else if (year === 2025) {
+        content = `
+          <div class="year-memory-text">
+            <span class="highlight-date">16. September 2025</span> Wiedergefunden, als du in meinem Raum gejoined bist, und dann regelmäßig geschrieben oder geredet bis ca. Ende Oktober.
+          </div>
+        `;
+      }
+
+      container.innerHTML = content;
+    }
+
+function renderCalendar2026() {
+  const month = parseInt(document.getElementById("monthSelect").value);
+  const container = document.getElementById("contentArea");
+
+  const currentRanges = (typeof ranges2026 !== 'undefined') ? ranges2026 : [];
+  const currentSummaries = (typeof monthSummaries !== 'undefined') ? monthSummaries : {};
+
+  // Kalender-Header
+  container.innerHTML = `
+    <div class="calendar-header">
+      <div>Mo</div><div>Di</div><div>Mi</div><div>Do</div><div>Fr</div><div>Sa</div><div>So</div>
+    </div>
+    <div id="calendar" class="calendar-grid"></div>
+  `;
+
+  // Zusammenfassungs-Box unterhalb anpassen/erzeugen
+  const parentContainer = container.parentNode;
+  const oldSummary = document.getElementById("summaryBox");
+  if (oldSummary) oldSummary.remove();
+
+  const summaryBox = document.createElement("div");
+  summaryBox.id = "summaryBox";
+  summaryBox.className = "summary-box";
+  summaryBox.innerHTML = `
+    <div class="summary-header" onclick="toggleSummary()">
+      <span>Zusammenfassung ${monthNames[month]}</span>
+      <span id="summaryArrow" style="color: #6e5845; font-size: 14px;">▼</span>
+    </div>
+    <div class="summary-content" id="summaryContent">
+      ${currentSummaries[month] || "Keine allgemeine Zusammenfassung für diesen Monat hinterlegt."}
+    </div>
+  `;
+  parentContainer.appendChild(summaryBox);
+
+  const calendarDiv = document.getElementById("calendar");
+
+  const firstDay = new Date(2026, month, 1);
+  const lastDay = new Date(2026, month + 1, 0);
+  const totalDays = lastDay.getDate();
+
+  let startingDay = firstDay.getDay() - 1;
+  if (startingDay === -1) startingDay = 6;
+
+  // Leere Ziffern-Felder vor Monatsbeginn
+  for (let i = 0; i < startingDay; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.classList.add("day", "empty");
+    calendarDiv.appendChild(emptyCell);
+  }
+
+  // Tage des Monats generieren
+  for (let day = 1; day <= totalDays; day++) {
+    const dayCell = document.createElement("div");
+    dayCell.classList.add("day");
+    
+    const dayNumber = document.createElement("span");
+    dayNumber.classList.add("day-number");
+    dayNumber.innerText = day;
+    dayCell.appendChild(dayNumber);
+
+    const formattedMonth = String(month + 1).padStart(2, '0');
+    const formattedDay = String(day).padStart(2, '0');
+    const dateKey = `2026-${formattedMonth}-${formattedDay}`;
+
+    // Daten für Urlaub und Einzelevents auslesen
+    const rangeInfo = currentRanges.find(r => dateKey >= r.start && dateKey <= r.end);
+    const dayEvents = events2026[dateKey] || [];
+
+    const rangeEvent = rangeInfo ? [{
+      titel: rangeInfo.titel,
+      beschreibung: rangeInfo.beschreibung
+    }] : [];
+
+    // Klassen zuweisen
+    if (rangeInfo) {
+      dayCell.classList.add("in-range");
+    }
+
+    if (dayEvents.length > 0) {
+      dayCell.classList.add("has-event");
+    }
+
+    // Modal-Klick-Event setzen
+    if (dayEvents.length > 0 || rangeInfo) {
+      const combinedEvents = [...dayEvents, ...rangeEvent];
+      dayCell.onclick = () => openModal(dateKey, combinedEvents);
+    } else {
+      dayCell.onclick = () => openModal(dateKey, []);
+    }
+
+    calendarDiv.appendChild(dayCell);
+  }
+}
+function toggleSummary() {
+  const content = document.getElementById("summaryContent");
+  const arrow = document.getElementById("summaryArrow");
+  if (content.style.display === "block") {
+    content.style.display = "none";
+    arrow.innerText = "▼";
+  } else {
+    content.style.display = "block";
+    arrow.innerText = "▲";
+  }
+}
+
+    function openModal(dateKey, eventList) {
+      const dateObj = new Date(dateKey);
+      const options = { day: 'numeric', month: 'long', year: 'numeric' };
+      document.getElementById("modalDate").innerText = dateObj.toLocaleDateString('de-DE', options);
+      
+      const container = document.getElementById("modalEventsContainer");
+      container.innerHTML = "";
+
+      if (eventList && eventList.length > 0) {
+        eventList.forEach(event => {
+          const block = document.createElement("div");
+          block.classList.add("event-block");
+          
+          let imagesHtml = '';
+          const imageArray = event.bilder || (event.bild ? [event.bild] : []);
+
+          if (imageArray.length > 0) {
+            imageArray.forEach(src => {
+              if (src) {
+                imagesHtml += `<img src="${src}" alt="${event.titel}" class="event-img" onclick="openImageModal('${src}')">`;
+              }
+            });
+          }
+
+          block.innerHTML = `
+            <h3>${event.titel}</h3>
+            <p>${event.beschreibung}</p>
+            ${imagesHtml}
+          `;
+          
+          container.appendChild(block);
+        });
+      } else {
+        container.innerHTML = `
+          <div class="event-block">
+            <h3>Kein Eintrag</h3>
+            <p>An diesem Tag ist noch kein Moment hinterlegt.</p>
+          </div>
+        `;
+      }
+
+      document.getElementById("eventModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("eventModal").style.display = "none";
+    }
+
+    /* --- BILD-ZOOM LOGIK (NUR MAUSRAD) --- */
+    let zoomScale = 1;
+    const zoomedImg = document.getElementById("zoomedImage");
+
+    function openImageModal(src) {
+      const imgModal = document.getElementById("imageModal");
+      zoomedImg.src = src;
+      zoomScale = 1;
+      zoomedImg.style.transform = `scale(1)`;
+      imgModal.style.display = "flex";
+    }
+
+    function closeImageModal() {
+      document.getElementById("imageModal").style.display = "none";
+    }
+
+    // Zoom per Mausrad
+    document.getElementById("imageModal").addEventListener("wheel", function(e) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        zoomScale = Math.min(zoomScale + 0.25, 4); // Max 4x Zoom
+      } else {
+        zoomScale = Math.max(zoomScale - 0.25, 1); // Min 1x Zoom
+      }
+      zoomedImg.style.transform = `scale(${zoomScale})`;
+    });
+
+    // Schließen per Klick auf den dunklen Hintergrund
+    window.onclick = function(event) {
+      const eventModal = document.getElementById("eventModal");
+      const imageModal = document.getElementById("imageModal");
+      if (event.target == eventModal) {
+        eventModal.style.display = "none";
+      }
+      if (event.target == imageModal) {
+        imageModal.style.display = "none";
+      }
+    }
+
+    selectYear(2026);
+  </script>
+
+</body>
+</html>
