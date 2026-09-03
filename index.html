@@ -6,7 +6,14 @@
   <title>Unsere Erinnerungen | Midnight Autumn</title>
   <style>
    
-
+#contentArea, 
+.calendar-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 12px 8px !important; /* Weniger Abstand links/rechts, damit das Grid hineinpasst */
+  overflow: hidden; /* Verhindert seitliches Rausstehen */
+}
     /* --- RESETS & BASE --- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -138,7 +145,9 @@
   width: 100% !important;
   gap: 6px; /* Abstand zwischen den Tagen */
   align-items: stretch; /* Alle Kästchen einer Zeile gleich hoch ziehen */
-  margin: 0 auto !important; 
+  
+  margin: 0 !important;
+  padding: 0 !important;
 }
     
     /* Normale Tage (2026) */
@@ -159,7 +168,9 @@
     .day { 
       background: #140d08;
       border: 1px solid #1f120a; 
-      min-height: 75px; 
+      min-height: 75px;
+      width: 100% !important;
+      min-width: 0 !important;
       padding: 10px; 
       border-radius: 6px; 
       cursor: pointer; 
