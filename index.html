@@ -12,7 +12,9 @@
       width: 100%;
       overflow-x: hidden; /* Verhindert seitliche Schiebebalken auf Handys */
       -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      margin: 0;
+      padding: 0;
     }
 
     body { 
@@ -133,6 +135,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 4px; /* Abstand zwischen den Tagen */
   align-items: stretch; /* Alle Kästchen einer Zeile gleich hoch ziehen */
+  margin: 0 auto !important; /
 }
     
     /* Normale Tage (2026) */
@@ -160,8 +163,8 @@
       position: relative;
       transition: all 0.2s ease;
       display: flex;
-      align-items: flex-start;
-      justify-content: flex-start;
+      align-items: center;
+      justify-content: center;
     }
 
     .day-number {
