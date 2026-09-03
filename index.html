@@ -126,7 +126,12 @@
       letter-spacing: 1px;
     }
     
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px; /* Abstand zwischen den Tagen */
+  align-items: stretch; /* Alle Kästchen einer Zeile gleich hoch ziehen */
+}
     
     /* Normale Tage (2026) */
     .day.in-range {
@@ -221,6 +226,7 @@
       color: #b8a690;
       padding: 20px 10px;
     }
+    
 
     /* --- ALLGEMEINES MODAL / POPUP --- */
     .modal { 
