@@ -420,19 +420,15 @@
 
     <!-- Jahres-Menü -->
     <div class="timeline-nav">
-      <button class="timeline-btn" onclick="selectYear(2019)"selected>2019</button>
+      <button class="timeline-btn active" onclick="selectYear(2019)">2019</button>
       <button class="timeline-btn" onclick="selectYear(2022)">2022</button>
       <button class="timeline-btn" onclick="selectYear(2025)">2025</button>
-      <button class="timeline-btn active" onclick="selectYear(2026)">2026</button>
+      <button class="timeline-btn" onclick="selectYear(2026)">2026</button>
     </div>
 
     <!-- Monats-Auswahl -->
     <div class="month-select-wrapper" id="monthSelectWrapper">
       <select id="monthSelect" onchange="renderCalendar2026()">
-        <option value="0">Januar</option>
-        <option value="1">Februar</option>
-        <option value="2">März</option>
-        <option value="3">April</option>
         <option value="4" >Mai</option>
         <option value="5">Juni</option>
         <option value="6">Juli</option>
@@ -482,6 +478,8 @@
   <script>
     let currentYear = 2026;
     const monthNames = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+
+    
     
     const ranges2026 = [
       {
